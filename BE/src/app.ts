@@ -1,0 +1,52 @@
+import express from 'express';
+import cors from 'cors';
+import { generalLimiter } from './middleware/rateLimiter';
+import { errorHandler } from './middleware/errorHandler';
+import { NotFoundError } from './errors/NotFoundError';
+
+/**
+ * Express application factory.
+ * Routes will be mounted by server.ts once all route modules are available.
+ */
+const app = express();
+
+// ─── Body Parsing ────────────────────────────────────────────────────────────
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ─── CORS ────────────────────────────────────────────────────────────────────
+app.use(
+  cors({
+    origin: process.env.SOCKETIO_CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Sensor-API-Key'],
+  }),
+);
+
+// ─── Rate Limiting ────────────────────────────────────────────────────────────
+app.use(generalLimiter);
+
+// ─── Health Check ─────────────────────────────────────────────────────────────
+app.get('/health', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'BlazeWatch API is running',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ─── Routes ───────────────────────────────────────────────────────────────────
+// Routes will be registered here by server.ts
+// e.g., app.use('/api/v1/auth', authRoutes);
+// e.g., app.use('/api/v1/sensors', sensorRoutes);
+
+// ─── 404 Handler ──────────────────────────────────────────────────────────────
+app.use((_req, _res, next) => {
+  next(new NotFoundError('The requested endpoint does not exist'));
+});
+
+// ─── Global Error Handler (must be last) ─────────────────────────────────────
+app.use(errorHandler);
+
+export default app;

@@ -1,1 +1,15 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables
+.env
+!.env.example
+
+# SQLite database files
+data/*.sqlite
+
+# Kiro spec files
+.kiro
