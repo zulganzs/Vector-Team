@@ -6,6 +6,8 @@ import { NotFoundError } from './errors/NotFoundError';
 import authRoutes from './routes/auth.routes';
 import sensorRoutes from './routes/sensor.routes';
 import incidentRoutes from './routes/incident.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import auditLogRoutes from './routes/auditLog.routes';
 
 /**
  * Express application factory.
@@ -43,6 +45,8 @@ app.get('/health', (_req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/sensors', sensorRoutes);
 app.use('/api/v1/incidents', incidentRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/audit-logs', auditLogRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((_req, _res, next) => {
