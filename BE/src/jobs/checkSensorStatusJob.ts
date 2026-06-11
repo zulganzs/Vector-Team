@@ -1,5 +1,6 @@
-import { db } from '../config/database';
+import { redisClient } from '../config/redis';
 import { sensorRepository } from '../repositories/sensorRepository';
+import { auditLogRepository } from '../repositories/auditLogRepository';
 import { realtimeService } from '../services/realtimeService';
 import { incidentService } from '../services/incidentService';
 import { incidentRepository } from '../repositories/incidentRepository';
@@ -17,19 +18,13 @@ import type { Sensor } from '../types/domain.types';
  * Called by node-cron every 30 seconds.
  */
 export async function checkSensorStatusJob(): Promise<void> {
+  console.log('[CheckSensorStatusJob] Running sensor offline detection...');
+
   const thresholdSeconds = env.SENSOR_OFFLINE_THRESHOLD_SECONDS;
-  const cutoffTime = new Date(
-    Date.now() - thresholdSeconds * 1000,
-  ).toISOString();
 
   try {
-    // Find sensors that were online but haven't been seen since the cutoff
-    const staleSensors = await db<Sensor>('sensors')
-      .where('status', SensorStatus.ONLINE)
-      .where('is_active', true)
-      .where(function () {
-        this.whereNull('last_seen_at').orWhere('last_seen_at', '<', cutoffTime);
-      });
+    // Find active sensors not already offline that haven't been seen within threshold
+    const staleSensors = await sensorRepository.findOfflineSensors(thresholdSeconds);
 
     if (staleSensors.length === 0) {
       return;
@@ -44,9 +39,49 @@ export async function checkSensorStatusJob(): Promise<void> {
         // Update sensor status to offline in DB
         await sensorRepository.updateStatus(sensor.id, SensorStatus.OFFLINE, sensor.last_seen_at ?? undefined);
 
-        // Emit real-time event
+        // Update Redis cache: blazewatch:sensor_status:{sensor_id}
+        try {
+          await redisClient.set(
+            `blazewatch:sensor_status:${sensor.id}`,
+            JSON.stringify({ status: SensorStatus.OFFLINE, last_seen_at: sensor.last_seen_at ?? null }),
+            'EX',
+            120, // 2 minute cache TTL
+          );
+        } catch (cacheErr) {
+          console.warn(
+            `[CheckSensorStatusJob] Failed to update Redis cache for sensor ${sensor.id}:`,
+            cacheErr,
+          );
+        }
+
+        // Emit real-time sensor.offline event
         const updatedSensor: Sensor = { ...sensor, status: SensorStatus.OFFLINE };
         realtimeService.emitSensorOffline(updatedSensor);
+
+        // Create audit log entry (fire-and-forget)
+        try {
+          await auditLogRepository.create({
+            user_id: null,
+            action: 'sensor.offline',
+            entity_type: 'sensor',
+            entity_id: sensor.id,
+            old_values: null,
+            new_values: JSON.stringify({
+              sensor_id: sensor.id,
+              sensor_code: sensor.sensor_code,
+              zone_id: sensor.zone_id,
+              last_seen_at: sensor.last_seen_at ?? null,
+              status: SensorStatus.OFFLINE,
+            }),
+            ip_address: null,
+            user_agent: null,
+          });
+        } catch (auditErr) {
+          console.warn(
+            `[CheckSensorStatusJob] Failed to create audit log for sensor ${sensor.id}:`,
+            auditErr,
+          );
+        }
 
         console.log(
           `[CheckSensorStatusJob] Sensor ${sensor.sensor_code} (${sensor.id}) marked offline.`,
@@ -66,7 +101,7 @@ export async function checkSensorStatusJob(): Promise<void> {
 /**
  * Auto-close incidents that have been in RESOLVED status for more than 24 hours.
  *
- * Called by node-cron (recommended: every hour or daily).
+ * Called by node-cron every hour.
  */
 export async function autoCloseResolvedIncidents(): Promise<void> {
   try {

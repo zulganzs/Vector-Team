@@ -1,6 +1,7 @@
 import { redisClient } from '../config/redis';
 import { sensorRepository } from '../repositories/sensorRepository';
 import { sensorReadingRepository } from '../repositories/sensorReadingRepository';
+import { auditLogRepository } from '../repositories/auditLogRepository';
 import { idempotencyService } from './idempotencyService';
 import { sensorClassificationService } from './sensorClassificationService';
 import { realtimeService } from './realtimeService';
@@ -32,7 +33,8 @@ export interface ProcessReadingResult {
  * 4. Persist sensor_reading record
  * 5. Update sensor status (online) in DB + Redis cache
  * 6. Emit real-time sensor.update event
- * 7. Trigger incident evaluation (if not duplicate)
+ * 7. Emit sensor.online + audit log if recovering from offline (Task 8.2)
+ * 8. Trigger incident evaluation (if not duplicate)
  */
 
 /**
@@ -54,6 +56,9 @@ async function processReading(payload: SensorDataInput): Promise<ProcessReadingR
   if (!sensor.is_active) {
     throw new AppError(`Sensor '${sensorCode}' is inactive`, 403, 'SENSOR_INACTIVE');
   }
+
+  // Capture previous status before any update (used in Task 8.2 for online recovery detection)
+  const previousStatus = sensor.status;
 
   // ── 2. Idempotency check ──────────────────────────────────────────────────
   const timestampUnix = Math.floor(new Date(timestamp).getTime() / 1000);
@@ -103,12 +108,44 @@ async function processReading(payload: SensorDataInput): Promise<ProcessReadingR
     console.warn('[SensorProcessingService] realtimeService.emitSensorUpdate failed:', realtimeErr);
   }
 
-  // Task 8.2: emit sensor.online on recovery from offline state
-  // if (previousStatus === SensorStatus.OFFLINE) {
-  //   realtimeService.emitSensorOnline(updatedSensor);
-  // }
+  // ── 8.2: Emit sensor.online on recovery from offline state ────────────────
+  if (previousStatus === SensorStatus.OFFLINE) {
+    const recoveredSensor = { ...sensor, status: SensorStatus.ONLINE, last_seen_at: now };
 
-  // ── 8. Trigger incident evaluation (non-duplicate readings only) ──────────
+    try {
+      realtimeService.emitSensorOnline(recoveredSensor);
+    } catch (realtimeErr) {
+      console.warn('[SensorProcessingService] realtimeService.emitSensorOnline failed:', realtimeErr);
+    }
+
+    // Create audit log entry (fire-and-forget — must never throw)
+    try {
+      await auditLogRepository.create({
+        user_id: null,
+        action: 'sensor.online',
+        entity_type: 'sensor',
+        entity_id: sensor.id,
+        old_values: JSON.stringify({ status: SensorStatus.OFFLINE }),
+        new_values: JSON.stringify({
+          sensor_id: sensor.id,
+          sensor_code: sensor.sensor_code,
+          zone_id: sensor.zone_id,
+          last_seen_at: now,
+          status: SensorStatus.ONLINE,
+        }),
+        ip_address: null,
+        user_agent: null,
+      });
+    } catch (auditErr) {
+      console.warn('[SensorProcessingService] Failed to create audit log for sensor.online:', auditErr);
+    }
+
+    console.log(
+      `[SensorProcessingService] Sensor ${sensor.sensor_code} (${sensor.id}) recovered from offline to online.`,
+    );
+  }
+
+  // ── 9. Trigger incident evaluation (non-duplicate readings only) ──────────
   if (!isDuplicate) {
     try {
       await incidentService.evaluateSensorReading(reading);
