@@ -45,7 +45,8 @@ export interface SensorDataPayload {
 
 /** JWT payload attached to req.user after auth middleware */
 export interface JwtPayload {
-  sub: string;   // user ID
+  sub: string;   // user ID (JWT standard claim)
+  id: string;    // convenience alias for sub, set by authMiddleware
   role: string;  // user role name
   jti: string;   // JWT ID for blacklisting
   iat: number;

@@ -3,6 +3,7 @@ import cors from 'cors';
 import { generalLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import { NotFoundError } from './errors/NotFoundError';
+import authRoutes from './routes/auth.routes';
 
 /**
  * Express application factory.
@@ -37,9 +38,7 @@ app.get('/health', (_req, res) => {
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-// Routes will be registered here by server.ts
-// e.g., app.use('/api/v1/auth', authRoutes);
-// e.g., app.use('/api/v1/sensors', sensorRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((_req, _res, next) => {
