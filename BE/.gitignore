@@ -9,7 +9,7 @@ dist/
 !.env.example
 
 # SQLite database files
-data/*.sqlite
+! data/*.sqlite
 
 # Kiro spec files
 .kiro
