@@ -1,69 +1,163 @@
+import type { Server } from 'socket.io';
 import type { SensorReading, Sensor, Incident, Notification } from '../types/domain.types';
 
 /**
- * Real-Time Event Service — STUB
+ * Real-Time Event Service — Socket.IO Singleton
  *
- * This file is a minimal stub created for Task 4 (IoT Sensor Data Ingestion).
- * Full implementation with Socket.IO will be provided in Task 7 (Real-Time WebSocket).
+ * Module-level singleton that wraps the Socket.IO server instance.
+ * Call `initialize(io)` once at startup from `websocket-server.ts` before
+ * any other method is used.
  *
- * All methods are no-ops that log a placeholder message.
- * The function signatures are intentionally compatible with the final implementation
- * so no call-site changes will be required.
+ * All public methods are wrapped in try/catch and will never throw to caller.
  */
 
-/** Initialise the Socket.IO instance (called by websocket-server entry point). */
-function initialize(_io: unknown): void {
-  // Stub — full implementation in Task 7
+let io: Server | null = null;
+
+/**
+ * Store the Socket.IO server instance. Must be called once at startup.
+ *
+ * @param ioInstance - Configured Socket.IO Server instance
+ */
+function initialize(ioInstance: Server): void {
+  io = ioInstance;
 }
 
-/** Emit a raw event with an optional payload. */
-function emit(_event: string, _payload?: unknown): void {
-  // Stub — full implementation in Task 7
+/**
+ * Broadcast a raw event with an optional payload to ALL connected clients.
+ * Logs a warning if the service has not been initialized yet.
+ *
+ * @param event   - Socket.IO event name (e.g. `sensor.update`)
+ * @param payload - Optional data to send with the event
+ */
+function emit(event: string, payload?: unknown): void {
+  try {
+    if (!io) {
+      console.warn(`[realtimeService] emit("${event}") called before initialize() — skipping`);
+      return;
+    }
+    io.emit(event, payload);
+  } catch (err) {
+    console.error(`[realtimeService] Failed to emit event "${event}":`, err);
+  }
 }
 
-/** Emit `sensor.update` when a new reading is processed. */
-function emitSensorUpdate(_reading: SensorReading): void {
-  // Stub — full implementation in Task 7
+/**
+ * Emit an event scoped to a specific building room.
+ * Clients must join room `building:{buildingId}` to receive these events.
+ *
+ * @param buildingId - UUID of the target building
+ * @param event      - Socket.IO event name
+ * @param payload    - Optional data to send with the event
+ */
+function emitToBuilding(buildingId: string, event: string, payload?: unknown): void {
+  try {
+    if (!io) {
+      console.warn(
+        `[realtimeService] emitToBuilding("${buildingId}", "${event}") called before initialize() — skipping`,
+      );
+      return;
+    }
+    io.to(`building:${buildingId}`).emit(event, payload);
+  } catch (err) {
+    console.error(
+      `[realtimeService] Failed to emit event "${event}" to building "${buildingId}":`,
+      err,
+    );
+  }
 }
 
-/** Emit `sensor.offline` when a sensor goes offline. */
-function emitSensorOffline(_sensor: Sensor): void {
-  // Stub — full implementation in Task 7
+/**
+ * Broadcast a new sensor reading to all connected clients.
+ * Event: `sensor.update`
+ *
+ * @param reading - The SensorReading that was just processed
+ */
+function emitSensorUpdate(reading: SensorReading): void {
+  try {
+    emit('sensor.update', reading);
+  } catch (err) {
+    console.error('[realtimeService] Failed to emit sensor.update:', err);
+  }
 }
 
-/** Emit `sensor.online` when a sensor comes back online. */
-function emitSensorOnline(_sensor: Sensor): void {
-  // Stub — full implementation in Task 7
+/**
+ * Broadcast a sensor-offline event to all connected clients.
+ * Event: `sensor.offline`
+ *
+ * @param sensor - The Sensor that went offline
+ */
+function emitSensorOffline(sensor: Sensor): void {
+  try {
+    emit('sensor.offline', sensor);
+  } catch (err) {
+    console.error('[realtimeService] Failed to emit sensor.offline:', err);
+  }
 }
 
-/** Emit `incident.created` when a new incident is detected. */
-function emitIncidentCreated(_incident: Incident): void {
-  // Stub — full implementation in Task 7
+/**
+ * Broadcast a sensor-online event to all connected clients.
+ * Event: `sensor.online`
+ *
+ * @param sensor - The Sensor that came back online
+ */
+function emitSensorOnline(sensor: Sensor): void {
+  try {
+    emit('sensor.online', sensor);
+  } catch (err) {
+    console.error('[realtimeService] Failed to emit sensor.online:', err);
+  }
 }
 
-/** Emit `incident.updated` when an incident status changes. */
-function emitIncidentUpdated(_incident: Incident): void {
-  // Stub — full implementation in Task 7
+/**
+ * Emit an `incident.created` event to the building room where the incident occurred.
+ * Event: `incident.created`
+ *
+ * @param incident - The newly created Incident
+ */
+function emitIncidentCreated(incident: Incident): void {
+  try {
+    emitToBuilding(incident.building_id, 'incident.created', incident);
+  } catch (err) {
+    console.error('[realtimeService] Failed to emit incident.created:', err);
+  }
 }
 
-/** Emit `notification.sent` after an SMS is dispatched. */
-function emitNotificationSent(_notification: Notification): void {
-  // Stub — full implementation in Task 7
+/**
+ * Emit an `incident.updated` event to the building room where the incident occurred.
+ * Event: `incident.updated`
+ *
+ * @param incident - The updated Incident
+ */
+function emitIncidentUpdated(incident: Incident): void {
+  try {
+    emitToBuilding(incident.building_id, 'incident.updated', incident);
+  } catch (err) {
+    console.error('[realtimeService] Failed to emit incident.updated:', err);
+  }
 }
 
-/** Emit an event scoped to a specific building channel. */
-function emitToBuilding(_buildingId: string, _event: string, _payload?: unknown): void {
-  // Stub — full implementation in Task 7
+/**
+ * Broadcast a notification-sent event to all connected clients.
+ * Event: `notification.sent`
+ *
+ * @param notification - The Notification that was dispatched
+ */
+function emitNotificationSent(notification: Notification): void {
+  try {
+    emit('notification.sent', notification);
+  } catch (err) {
+    console.error('[realtimeService] Failed to emit notification.sent:', err);
+  }
 }
 
 export const realtimeService = {
   initialize,
   emit,
+  emitToBuilding,
   emitSensorUpdate,
   emitSensorOffline,
   emitSensorOnline,
   emitIncidentCreated,
   emitIncidentUpdated,
   emitNotificationSent,
-  emitToBuilding,
 };

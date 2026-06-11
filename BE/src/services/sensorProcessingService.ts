@@ -103,6 +103,11 @@ async function processReading(payload: SensorDataInput): Promise<ProcessReadingR
     console.warn('[SensorProcessingService] realtimeService.emitSensorUpdate failed:', realtimeErr);
   }
 
+  // Task 8.2: emit sensor.online on recovery from offline state
+  // if (previousStatus === SensorStatus.OFFLINE) {
+  //   realtimeService.emitSensorOnline(updatedSensor);
+  // }
+
   // ── 8. Trigger incident evaluation (non-duplicate readings only) ──────────
   if (!isDuplicate) {
     try {
