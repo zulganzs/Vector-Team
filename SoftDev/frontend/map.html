@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Lokasi ESP32 — Monitoring Kebakaran & Asap</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background: #0a0a0a;
+                color: #e0e0e0;
+                min-height: 100vh;
+            }
+            header {
+                background: linear-gradient(135deg, #1a1a2e, #16213e);
+                padding: 24px 20px 16px;
+                text-align: center;
+                border-bottom: 3px solid #ff6b35;
+            }
+            header h1 {
+                color: #ff9800;
+                font-size: 1.6rem;
+                margin-bottom: 4px;
+            }
+            header p {
+                color: #888;
+                font-size: 0.8rem;
+            }
+            .container {
+                max-width: 960px;
+                margin: 0 auto;
+                padding: 24px 16px;
+            }
+            .conn-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background: #111;
+                border-radius: 10px;
+                padding: 12px 18px;
+                margin-bottom: 24px;
+                font-size: 0.8rem;
+            }
+            .conn-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .conn-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 6px;
+            }
+            .conn-dot.on {
+                background: #4caf50;
+                box-shadow: 0 0 6px #4caf50;
+            }
+            .conn-dot.off {
+                background: #f44336;
+                animation: pulse 1.2s infinite;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.3; }
+            }
+            .btn-back {
+                background: #333;
+                color: #e0e0e0;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 8px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                transition: background 0.2s;
+            }
+            .btn-back:hover {
+                background: #444;
+            }
+            .map-table {
+                width: 100%;
+                border-collapse: collapse;
+                background: #111;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            .map-table td {
+                vertical-align: top;
+                border: 1px solid #1e1e1e;
+            }
+            .map-cell {
+                height: 450px;
+                width: 65%;
+            }
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+            .info-cell {
+                width: 35%;
+                padding: 20px;
+            }
+            .info-title {
+                color: #ff9800;
+                font-size: 0.9rem;
+                font-weight: 600;
+                margin-bottom: 16px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px 0;
+                border-bottom: 1px solid #1e1e1e;
+                font-size: 0.8rem;
+            }
+            .info-label {
+                color: #777;
+            }
+            .info-value {
+                color: #e0e0e0;
+                font-weight: 600;
+            }
+            .info-value.online {
+                color: #4caf50;
+            }
+            .info-value.offline {
+                color: #f44336;
+            }
+            .badge {
+                display: inline-block;
+                padding: 4px 12px;
+                border-radius: 16px;
+                font-size: 0.75rem;
+                font-weight: 600;
+            }
+            .badge-safe {
+                background: #1b5e20;
+                color: #a5d6a7;
+            }
+            .badge-danger {
+                background: #b71c1c;
+                color: #ef9a9a;
+            }
+            .section-title {
+                color: #ff9800;
+                font-size: 1rem;
+                margin: 28px 0 12px;
+                padding-left: 4px;
+            }
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                background: #111;
+                border-radius: 10px;
+                overflow: hidden;
+                font-size: 0.78rem;
+                margin-top: 8px;
+            }
+            .data-table th {
+                background: #1a1a1a;
+                color: #ff9800;
+                padding: 10px 8px;
+                text-transform: uppercase;
+                font-size: 0.7rem;
+                letter-spacing: 0.8px;
+            }
+            .data-table td {
+                padding: 8px;
+                border-bottom: 1px solid #1e1e1e;
+                color: #bbb;
+                text-align: center;
+            }
+            .data-table tr:last-child td {
+                border-bottom: none;
+            }
+            footer {
+                text-align: center;
+                padding: 20px;
+                font-size: 0.7rem;
+                color: #444;
+            }
+            .leaflet-container {
+                background: #0a0a0a;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Lokasi ESP32</h1>
+            <p>Monitoring Kebakaran & Asap — Peta Perangkat</p>
+        </header>
+        <div class="container">
+            <div class="conn-bar">
+                <div class="conn-left">
+                    <span class="conn-dot" id="dot"></span>
+                    <span id="conn-text">Menghubungkan…</span>
+                </div>
+                <a href="index.html" class="btn-back">Kembali</a>
+            </div>
+
+            <table class="map-table">
+                <tr>
+                    <td class="map-cell">
+                        <div id="map"></div>
+                    </td>
+                    <td class="info-cell">
+                        <div class="info-title">Informasi Perangkat</div>
+                        <div class="info-row">
+                            <span class="info-label">Perangkat</span>
+                            <span class="info-value">ESP32-01</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Status</span>
+                            <span class="info-value" id="dev-status">—</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Terakhir Aktif</span>
+                            <span class="info-value" id="dev-lastseen">—</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Koordinat</span>
+                            <span class="info-value" id="dev-coord">—</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Suhu</span>
+                            <span class="info-value">—</span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="section-title"><b>Riwayat Lokasi Terakhir</b></div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Waktu</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="hist"></tbody>
+            </table>
+        </div>
+        <footer>KODE IoT v5.1 · Peta Lokasi ESP32</footer>
+
+        <script>
+            const API = "https://testing-production-3853.up.railway.app";
+            const INTERVAL = 5000;
+
+            // ============================================================
+            // KONFIGURASI LOKASI — ubah koordinat default di sini
+            // ============================================================
+            const DEFAULT_LAT = -6.2088;
+            const DEFAULT_LNG = 106.8456;
+
+            const map = L.map("map").setView([DEFAULT_LAT, DEFAULT_LNG], 15);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+            }).addTo(map);
+
+            const marker = L.marker([DEFAULT_LAT, DEFAULT_LNG]).addTo(map);
+            marker.bindPopup("<b>ESP32-01</b><br>Lokasi Perangkat").openPopup();
+
+            document.getElementById("dev-coord").innerText =
+                DEFAULT_LAT.toFixed(6) + ", " + DEFAULT_LNG.toFixed(6);
+
+            let errors = 0;
+            const history = [];
+
+            function poll() {
+                fetch(API + "/api/data")
+                    .then((r) => {
+                        if (!r.ok) throw r;
+                        return r.json();
+                    })
+                    .then((d) => {
+                        errors = 0;
+                        const connected = d.esp_connected;
+
+                        document.getElementById("dot").className =
+                            "conn-dot " + (connected ? "on" : "off");
+                        document.getElementById("conn-text").innerText =
+                            connected ? "Terhubung" : "Tidak Terhubung";
+
+                        const statusEl = document.getElementById("dev-status");
+                        statusEl.innerText = connected ? "Online" : "Offline";
+                        statusEl.className =
+                            "info-value " + (connected ? "online" : "offline");
+
+                        document.getElementById("dev-lastseen").innerText =
+                            d.timestamp
+                                ? new Date(d.timestamp).toLocaleTimeString("id-ID")
+                                : "—";
+
+                        if (d.timestamp) {
+                            const time = new Date(d.timestamp).toLocaleTimeString("id-ID");
+                            const exists = history.some((h) => h.time === time);
+                            if (!exists) {
+                                history.push({
+                                    time: time,
+                                    lat: DEFAULT_LAT,
+                                    lng: DEFAULT_LNG,
+                                    connected: connected,
+                                });
+                                if (history.length > 10) history.shift();
+                                renderHistory();
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        if (++errors >= 3) {
+                            document.getElementById("dot").className = "conn-dot off";
+                            document.getElementById("conn-text").innerText = "Tidak Terhubung";
+                            document.getElementById("dev-status").innerText = "Offline";
+                            document.getElementById("dev-status").className = "info-value offline";
+                        }
+                    });
+            }
+
+            function renderHistory() {
+                document.getElementById("hist").innerHTML = history
+                    .slice()
+                    .reverse()
+                    .map(
+                        (h) =>
+                            `<tr>
+                                <td>${h.time}</td>
+                                <td>${h.lat.toFixed(6)}</td>
+                                <td>${h.lng.toFixed(6)}</td>
+                                <td><span class="badge ${h.connected ? "badge-safe" : "badge-danger"}">${h.connected ? "Online" : "Offline"}</span></td>
+                            </tr>`,
+                    )
+                    .join("");
+            }
+
+            setInterval(poll, INTERVAL);
+            poll();
+        </script>
+    </body>
+</html>
