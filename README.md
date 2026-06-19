@@ -66,6 +66,6 @@ KODE_FINAL/
 
 ## Kontributor
 
-- [Nama Anggota 1]
+- M. Faizul Kamal - SoftDev
 - [Nama Anggota 2]
 - [Nama Anggota 3]
