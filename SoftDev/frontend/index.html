@@ -4,6 +4,10 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Monitoring Kebakaran & Asap — IPBL</title>
+        <link rel="manifest" href="manifest.json">
+        <meta name="theme-color" content="#ff9800">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <style>
             * {
                 box-sizing: border-box;
@@ -214,6 +218,44 @@
                 font-size: 0.7rem;
                 color: #444;
             }
+
+            @media (max-width: 768px) {
+                .grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .map-table, .map-table tr, .map-table td {
+                    display: block;
+                    width: 100%;
+                }
+                .map-cell {
+                    height: 300px;
+                    width: 100%;
+                }
+                .info-cell {
+                    width: 100%;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+                header h1 {
+                    font-size: 1.2rem;
+                }
+                .card-value {
+                    font-size: 1.8rem;
+                }
+                .conn-bar {
+                    flex-direction: column;
+                    gap: 10px;
+                    text-align: center;
+                }
+                .conn-left {
+                    flex-wrap: wrap;
+                    justify-content: center;
+                }
+            }
         </style>
     </head>
     <body>
@@ -407,6 +449,12 @@
 
             setInterval(poll, INTERVAL);
             poll();
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registered:', reg.scope))
+                    .catch(err => console.log('SW failed:', err));
+            }
         </script>
     </body>
 </html>
