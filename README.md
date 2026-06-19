@@ -14,7 +14,7 @@ Sistem pemantauan cerdas berbasis IoT yang dirancang untuk mendeteksi potensi ke
 
 - **Frontend**: HTML5, CSS3, JavaScript, Leaflet.js (PWA ready).
 - **Backend**: Node.js, Express.js.
-- **IoT**: ESP32, Arduino IDE.
+- **IoT**: IoT: ESP32, Arduino IDE, Sensor Flame, Sensor Gas MQ-2, Sensor Ultrasonik, Servo, Relay, Water Pump, Buzzer.
 - **Deployment**: Vercel (Frontend), Railway (Backend).
 
 ## Struktur Proyek
@@ -30,7 +30,7 @@ KODE_FINAL/
 │   ├── map.html      # Peta lokasi perangkat
 │   ├── manifest.json # Konfigurasi PWA
 │   └── sw.js         # Service worker untuk offline
-└── KODE_FINAL_CLOUD.ino  # Firmware ESP32
+└── KODE_FINAL_CLOUD.ino  # Firmware ESP32 (WiFi.h, HTTPClient.h, ESP32Servo.h)
 ```
 
 ## Panduan Instalasi
@@ -59,6 +59,7 @@ KODE_FINAL/
 | `/api/history` | GET | Mengambil 100 data terakhir |
 | `/api/health` | GET | Cek kesehatan server |
 
+
 ## Instruksi Deployment
 
 - **Frontend**: Hubungkan repositori ke Vercel untuk deployment otomatis.
@@ -67,5 +68,5 @@ KODE_FINAL/
 ## Kontributor
 
 - M. Faizul Kamal - SoftDev
-- [Nama Anggota 2]
-- [Nama Anggota 3]
+- Lintang Metyaputri - Intelligence System
+- Rafania Chindy - Intelligence System
