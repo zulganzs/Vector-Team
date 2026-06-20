@@ -1,0 +1,171 @@
+{
+  "info": {
+    "name": "KODE IoT Monitoring API",
+    "description": "REST API untuk sistem monitoring kebakaran dan asap berbasis IoT.\n\n**Base URL:** `https://your-render-app.onrender.com`\n\n**Authentication:** Endpoint POST /api/data memerlukan header `x-api-key`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "KODE_IOT_SECRET_KEY_2024",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Root",
+      "item": [
+        {
+          "name": "Get API Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Menampilkan informasi dasar API dan daftar endpoint yang tersedia."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sensor Data",
+      "item": [
+        {
+          "name": "Get Latest Sensor Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/data",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data"]
+            },
+            "description": "Mengambil data sensor terbaru yang dikirim oleh ESP32.\n\n**Response:**\n- `ppm` (number): Kadar asap dalam PPM\n- `adc` (number): Nilai ADC dari sensor asap\n- `flame` (number): Status sensor api (0=api terdeteksi, 1=aman)\n- `dist` (number): Jarak dari sensor ultrasonik (cm)\n- `water_pct` (number): Persentase volume air\n- `pump` (number): Status pompa (0=mati, 1=nyala)\n- `timestamp` (string): Waktu data terakhir diperbarui (ISO 8601)"
+          },
+          "response": []
+        },
+        {
+          "name": "Post Sensor Data (ESP32)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "API Key untuk autentikasi ESP32"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ppm\": 120.5,\n  \"adc\": 800,\n  \"flame\": 0,\n  \"dist\": 15.3,\n  \"water_pct\": 75.5,\n  \"pump\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/data",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "data"]
+            },
+            "description": "Mengirim data sensor dari ESP32 ke server.\n\n**Headers:**\n- `x-api-key` (required): API Key untuk autentikasi\n\n**Body Parameters:**\n- `ppm` (number, required): Kadar asap dalam PPM\n- `adc` (number): Nilai ADC dari sensor asap\n- `flame` (number, required): Status sensor api (0=api terdeteksi, 1=aman)\n- `dist` (number, required): Jarak dari sensor ultrasonik (cm)\n- `water_pct` (number): Persentase volume air\n- `pump` (number): Status pompa (0=mati, 1=nyala)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "History",
+      "item": [
+        {
+          "name": "Get Data History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "history"]
+            },
+            "description": "Mengambil 100 data sensor terakhir yang tersimpan di server.\n\n**Response:** Array of sensor data objects dengan format yang sama seperti GET /api/data."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Memeriksa status server dan informasi uptime.\n\n**Response:**\n- `status` (string): Status server ('online')\n- `uptime` (number): Waktu server berjalan (detik)\n- `lastUpdate` (string): Waktu update terakhir (ISO 8601)\n- `readingsStored` (number): Jumlah data yang tersimpan"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set environment variables if not already set",
+          "if (!pm.environment.get('baseUrl')) {",
+          "    pm.environment.set('baseUrl', 'http://localhost:3000');",
+          "}",
+          "if (!pm.environment.get('apiKey')) {",
+          "    pm.environment.set('apiKey', 'KODE_IOT_SECRET_KEY_2024');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test response time",
+          "pm.test('Response time is less than 2000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "// Test status code",
+          "pm.test('Status code is 200', function () {",
+          "    pm.response.to.have.status(200);",
+          "});",
+          "",
+          "// Test response is JSON",
+          "pm.test('Response is JSON', function () {",
+          "    pm.response.to.have.header('Content-Type', /json/);",
+          "});"
+        ]
+      }
+    }
+  ]
+}
