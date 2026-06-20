@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kode-iot-v1';
+const CACHE_NAME = 'kode-iot-v3';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -8,6 +8,9 @@ const STATIC_ASSETS = [
 
 // Install event - cache static assets
 self.addEventListener('install', event => {
+    // Force the waiting service worker to become the active service worker
+    self.skipWaiting();
+    
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
@@ -19,6 +22,9 @@ self.addEventListener('install', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
+    // Claim any clients immediately, so they don't need a reload to be controlled by the new SW
+    event.waitUntil(self.clients.claim());
+    
     const cacheAllowlist = [CACHE_NAME];
     event.waitUntil(
         caches.keys().then(cacheNames => {

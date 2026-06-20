@@ -199,16 +199,22 @@
                 .grid {
                     grid-template-columns: repeat(2, 1fr);
                 }
-                .map-table, .map-table tr, .map-table td {
+                .map-table,
+                .map-table tbody,
+                .map-table tr,
+                .map-table td {
                     display: block;
-                    width: 100%;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    border-collapse: separate !important;
                 }
                 .map-cell {
                     height: 300px;
-                    width: 100%;
+                    width: 100% !important;
                 }
                 .info-cell {
-                    width: 100%;
+                    width: 100% !important;
+                    padding: 16px;
                 }
             }
 
@@ -294,98 +300,6 @@
         </div>
         <footer>KODE IoT v5.1 · Peta Lokasi ESP32</footer>
 
-        <script>
-            const API = "https://testing-production-3853.up.railway.app";
-            const INTERVAL = 5000;
-
-            // ============================================================
-            // KONFIGURASI LOKASI — ubah koordinat default di sini
-            // ============================================================
-            const DEFAULT_LAT = -6.2088;
-            const DEFAULT_LNG = 106.8456;
-
-            const map = L.map("map").setView([DEFAULT_LAT, DEFAULT_LNG], 15);
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
-            }).addTo(map);
-
-            const marker = L.marker([DEFAULT_LAT, DEFAULT_LNG]).addTo(map);
-            marker.bindPopup("<b>ESP32-01</b><br>Lokasi Perangkat").openPopup();
-
-            document.getElementById("dev-coord").innerText =
-                DEFAULT_LAT.toFixed(6) + ", " + DEFAULT_LNG.toFixed(6);
-
-            let errors = 0;
-            const history = [];
-
-            function poll() {
-                fetch(API + "/api/data")
-                    .then((r) => {
-                        if (!r.ok) throw r;
-                        return r.json();
-                    })
-                    .then((d) => {
-                        errors = 0;
-                        const connected = d.esp_connected;
-
-                        document.getElementById("dot").className =
-                            "conn-dot " + (connected ? "on" : "off");
-                        document.getElementById("conn-text").innerText =
-                            connected ? "Terhubung" : "Tidak Terhubung";
-
-                        const statusEl = document.getElementById("dev-status");
-                        statusEl.innerText = connected ? "Online" : "Offline";
-                        statusEl.className =
-                            "info-value " + (connected ? "online" : "offline");
-
-                        document.getElementById("dev-lastseen").innerText =
-                            d.timestamp
-                                ? new Date(d.timestamp).toLocaleTimeString("id-ID")
-                                : "—";
-
-                        if (d.timestamp) {
-                            const time = new Date(d.timestamp).toLocaleTimeString("id-ID");
-                            const exists = history.some((h) => h.time === time);
-                            if (!exists) {
-                                history.push({
-                                    time: time,
-                                    lat: DEFAULT_LAT,
-                                    lng: DEFAULT_LNG,
-                                    connected: connected,
-                                });
-                                if (history.length > 10) history.shift();
-                                renderHistory();
-                            }
-                        }
-                    })
-                    .catch(() => {
-                        if (++errors >= 3) {
-                            document.getElementById("dot").className = "conn-dot off";
-                            document.getElementById("conn-text").innerText = "Tidak Terhubung";
-                            document.getElementById("dev-status").innerText = "Offline";
-                            document.getElementById("dev-status").className = "info-value offline";
-                        }
-                    });
-            }
-
-            function renderHistory() {
-                document.getElementById("hist").innerHTML = history
-                    .slice()
-                    .reverse()
-                    .map(
-                        (h) =>
-                            `<tr>
-                                <td>${h.time}</td>
-                                <td>${h.lat.toFixed(6)}</td>
-                                <td>${h.lng.toFixed(6)}</td>
-                                <td><span class="badge ${h.connected ? "badge-safe" : "badge-danger"}">${h.connected ? "Online" : "Offline"}</span></td>
-                            </tr>`,
-                    )
-                    .join("");
-            }
-
-            setInterval(poll, INTERVAL);
-            poll();
-        </script>
+        <script type="module" src="js/map-app.js"></script>
     </body>
 </html>

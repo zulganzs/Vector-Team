@@ -1,460 +1,371 @@
 <!doctype html>
 <html lang="id">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Monitoring Kebakaran & Asap — IPBL</title>
-        <link rel="manifest" href="manifest.json">
-        <meta name="theme-color" content="#ff9800">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-        <style>
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                background: #0a0a0a;
-                color: #e0e0e0;
-                min-height: 100vh;
-            }
-            header {
-                background: linear-gradient(135deg, #1a1a2e, #16213e);
-                padding: 24px 20px 16px;
-                text-align: center;
-                border-bottom: 3px solid #ff6b35;
-            }
-            header h1 {
-                color: #ff9800;
-                font-size: 1.6rem;
-                margin-bottom: 4px;
-            }
-            header p {
-                color: #888;
-                font-size: 0.8rem;
-            }
-            .container {
-                max-width: 960px;
-                margin: 0 auto;
-                padding: 24px 16px;
-            }
-            .grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 16px;
-                margin-bottom: 24px;
-            }
-            .card {
-                background: #161616;
-                border-radius: 14px;
-                padding: 20px;
-                border-top: 4px solid #333;
-                transition:
-                    border-color 0.4s,
-                    box-shadow 0.4s;
-                position: relative;
-                overflow: hidden;
-            }
-            .card::before {
-                content: "";
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 4px;
-                transition: background 0.4s;
-            }
-            .card.safe {
-                border-top-color: #4caf50;
-            }
-            .card.safe::before {
-                background: #4caf50;
-            }
-            .card.warn {
-                border-top-color: #ff9800;
-            }
-            .card.warn::before {
-                background: #ff9800;
-            }
-            .card.danger {
-                border-top-color: #f44336;
-                box-shadow: 0 0 20px rgba(244, 67, 54, 0.15);
-            }
-            .card.danger::before {
-                background: #f44336;
-            }
-            .card-label {
-                font-size: 0.75rem;
-                color: #777;
-                text-transform: uppercase;
-                letter-spacing: 1.2px;
-                margin-bottom: 10px;
-            }
-            .card-value {
-                font-size: 2.4rem;
-                font-weight: 700;
-                color: #fff;
-                line-height: 1;
-                margin-bottom: 6px;
-            }
-            .card-sub {
-                font-size: 0.78rem;
-                color: #666;
-                margin-bottom: 12px;
-            }
-            .badge {
-                display: inline-block;
-                padding: 4px 12px;
-                border-radius: 16px;
-                font-size: 0.75rem;
-                font-weight: 600;
-            }
-            .badge-safe {
-                background: #1b5e20;
-                color: #a5d6a7;
-            }
-            .badge-warn {
-                background: #e65100;
-                color: #ffcc80;
-            }
-            .badge-danger {
-                background: #b71c1c;
-                color: #ef9a9a;
-            }
-            .badge-off {
-                background: #333;
-                color: #888;
-            }
-            .conn-bar {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                background: #111;
-                border-radius: 10px;
-                padding: 12px 18px;
-                margin-bottom: 24px;
-                font-size: 0.8rem;
-            }
-            .conn-left {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-            .btn-map {
-                background: linear-gradient(135deg, #ff9800, #ff6b35);
-                color: #fff;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 8px;
-                font-size: 0.78rem;
-                font-weight: 600;
-                cursor: pointer;
-                text-decoration: none;
-                transition: opacity 0.2s;
-            }
-            .btn-map:hover {
-                opacity: 0.85;
-            }
-            .conn-dot {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                display: inline-block;
-                margin-right: 6px;
-            }
-            .conn-dot.on {
-                background: #4caf50;
-                box-shadow: 0 0 6px #4caf50;
-            }
-            .conn-dot.off {
-                background: #f44336;
-                animation: pulse 1.2s infinite;
-            }
-            @keyframes pulse {
-                0%,
-                100% {
-                    opacity: 1;
-                }
-                50% {
-                    opacity: 0.3;
-                }
-            }
-            .section-title {
-                color: #ff9800;
-                font-size: 1rem;
-                margin: 28px 0 12px;
-                padding-left: 4px;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                background: #111;
-                border-radius: 10px;
-                overflow: hidden;
-                font-size: 0.78rem;
-            }
-            th {
-                background: #1a1a1a;
-                color: #ff9800;
-                padding: 10px 8px;
-                text-transform: uppercase;
-                font-size: 0.7rem;
-                letter-spacing: 0.8px;
-            }
-            td {
-                padding: 8px;
-                border-bottom: 1px solid #1e1e1e;
-                color: #bbb;
-                text-align: center;
-            }
-            tr:last-child td {
-                border-bottom: none;
-            }
-            footer {
-                text-align: center;
-                padding: 20px;
-                font-size: 0.7rem;
-                color: #444;
-            }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monitoring Kebakaran & Asap — IPBL</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ff9800" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #0a0a0a;
+        color: #e0e0e0;
+        min-height: 100vh;
+      }
+      header {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        padding: 24px 20px 16px;
+        text-align: center;
+        border-bottom: 3px solid #ff6b35;
+      }
+      header h1 {
+        color: #ff9800;
+        font-size: 1.6rem;
+        margin-bottom: 4px;
+      }
+      header p {
+        color: #888;
+        font-size: 0.8rem;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 24px 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .card {
+        background: #161616;
+        border-radius: 14px;
+        padding: 20px;
+        border-top: 4px solid #333;
+        transition:
+          border-color 0.4s,
+          box-shadow 0.4s;
+        position: relative;
+        overflow: hidden;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        transition: background 0.4s;
+      }
+      .card.safe {
+        border-top-color: #4caf50;
+      }
+      .card.safe::before {
+        background: #4caf50;
+      }
+      .card.warn {
+        border-top-color: #ff9800;
+      }
+      .card.warn::before {
+        background: #ff9800;
+      }
+      .card.danger {
+        border-top-color: #f44336;
+        box-shadow: 0 0 20px rgba(244, 67, 54, 0.15);
+      }
+      .card.danger::before {
+        background: #f44336;
+      }
+      .card-label {
+        font-size: 0.75rem;
+        color: #777;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        margin-bottom: 10px;
+      }
+      .card-value {
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1;
+        margin-bottom: 6px;
+      }
+      .card-sub {
+        font-size: 0.78rem;
+        color: #666;
+        margin-bottom: 12px;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+      .badge-safe {
+        background: #1b5e20;
+        color: #a5d6a7;
+      }
+      .badge-warn {
+        background: #e65100;
+        color: #ffcc80;
+      }
+      .badge-danger {
+        background: #b71c1c;
+        color: #ef9a9a;
+      }
+      .badge-off {
+        background: #333;
+        color: #888;
+      }
+      .conn-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #111;
+        border-radius: 10px;
+        padding: 12px 18px;
+        margin-bottom: 24px;
+        font-size: 0.8rem;
+      }
+      .conn-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .conn-right {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: auto;
+      }
+      .btn-map {
+        background: linear-gradient(135deg, #ff9800, #ff6b35);
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+      .btn-map:hover {
+        opacity: 0.85;
+      }
+      .btn-install {
+        background: linear-gradient(135deg, #ff9800, #ff6b35);
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .btn-install:hover {
+        opacity: 0.85;
+      }
+      .offline-badge {
+        background: #e65100;
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-left: 10px;
+      }
+      .conn-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+      }
+      .conn-dot.on {
+        background: #4caf50;
+        box-shadow: 0 0 6px #4caf50;
+      }
+      .conn-dot.off {
+        background: #f44336;
+        animation: pulse 1.2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .section-title {
+        color: #ff9800;
+        font-size: 1rem;
+        margin: 28px 0 12px;
+        padding-left: 4px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #111;
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 0.78rem;
+      }
+      th {
+        background: #1a1a1a;
+        color: #ff9800;
+        padding: 10px 8px;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.8px;
+      }
+      td {
+        padding: 8px;
+        border-bottom: 1px solid #1e1e1e;
+        color: #bbb;
+        text-align: center;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 0.7rem;
+        color: #444;
+      }
 
-            @media (max-width: 768px) {
-                .grid {
-                    grid-template-columns: repeat(2, 1fr);
-                }
-                .map-table, .map-table tr, .map-table td {
-                    display: block;
-                    width: 100%;
-                }
-                .map-cell {
-                    height: 300px;
-                    width: 100%;
-                }
-                .info-cell {
-                    width: 100%;
-                }
-            }
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .map-table,
+        .map-table tr,
+        .map-table td {
+          display: block;
+          width: 100%;
+        }
+        .map-cell {
+          height: 300px;
+          width: 100%;
+        }
+        .info-cell {
+          width: 100%;
+        }
+      }
 
-            @media (max-width: 480px) {
-                .grid {
-                    grid-template-columns: 1fr;
-                }
-                header h1 {
-                    font-size: 1.2rem;
-                }
-                .card-value {
-                    font-size: 1.8rem;
-                }
-                .conn-bar {
-                    flex-direction: column;
-                    gap: 10px;
-                    text-align: center;
-                }
-                .conn-left {
-                    flex-wrap: wrap;
-                    justify-content: center;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <header>
-            <h1>Monitoring Kebakaran & Asap</h1>
-            <p>Dashboard Real-Time via Cloud</p>
-        </header>
-        <div class="container">
-            <!-- Connection -->
-            <div class="conn-bar">
-                <div class="conn-left">
-                    <span class="conn-dot" id="dot"></span>
-                    <span id="conn-text">Menghubungkan…</span>
-                    <span id="last-time" style="color: #555">--:--:--</span>
-                </div>
-                <a href="map.html" class="btn-map">Lokasi</a>
-            </div>
-
-            <!-- Sensor Cards -->
-            <div class="grid">
-                <div class="card" id="c-smoke">
-                    <div class="card-label">Kadar Asap</div>
-                    <div class="card-value" id="v-ppm">--</div>
-                    <div class="card-sub">
-                        PPM · ADC: <span id="v-adc">--</span>
-                    </div>
-                    <span class="badge badge-off" id="b-smoke">Menunggu…</span>
-                </div>
-                <div class="card" id="c-flame">
-                    <div class="card-label">Sensor Api</div>
-                    <div class="card-value" id="v-flame">--</div>
-                    <div class="card-sub">Flame Sensor</div>
-                    <span class="badge badge-off" id="b-flame">Menunggu…</span>
-                </div>
-                <div class="card" id="c-water">
-                    <div class="card-label">Volume Air</div>
-                    <div class="card-value" id="v-water">--</div>
-                    <div class="card-sub">
-                        Jarak: <span id="v-dist">--</span> cm
-                    </div>
-                    <span class="badge badge-off" id="b-water">Menunggu…</span>
-                </div>
-                <div class="card" id="c-pump">
-                    <div class="card-label">Pompa Air</div>
-                    <div class="card-value" id="v-pump">--</div>
-                    <div class="card-sub">Relay Status</div>
-                    <span class="badge badge-off" id="b-pump">Menunggu…</span>
-                </div>
-            </div>
-
-            <!-- History -->
-            <div class="section-title"><b>Riwayat 10 Data Terakhir</b></div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Waktu</th>
-                        <th>PPM</th>
-                        <th>Api</th>
-                        <th>Air %</th>
-                        <th>Pompa</th>
-                    </tr>
-                </thead>
-                <tbody id="hist"></tbody>
-            </table>
+      @media (max-width: 480px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        header h1 {
+          font-size: 1.2rem;
+        }
+        .card-value {
+          font-size: 1.8rem;
+        }
+        .conn-bar {
+          flex-direction: column;
+          gap: 10px;
+          text-align: center;
+        }
+        .conn-left {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .conn-right {
+          margin-left: 0;
+          justify-content: center;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Monitoring Kebakaran & Asap</h1>
+      <p>Dashboard Real-Time via Cloud</p>
+    </header>
+    <div class="container">
+      <!-- Connection -->
+      <div class="conn-bar">
+        <div class="conn-left">
+          <span class="conn-dot" id="dot"></span>
+          <span id="conn-text">Menghubungkan…</span>
+          <span id="last-time" style="color: #555">--:--:--</span>
+          <span id="offline-badge" class="offline-badge" style="display: none"
+            >Offline Mode</span
+          >
         </div>
-        <footer>KODE IoT v5.1 · Polling setiap 2 detik</footer>
+        <div class="conn-right">
+          <button id="btn-install" class="btn-install" style="display: none">
+            Install App
+          </button>
+          <a href="map.html" class="btn-map">Lokasi</a>
+        </div>
+      </div>
 
-        <script>
-            const API = "https://testing-production-3853.up.railway.app";
-            const INTERVAL = 2000;
+      <!-- Sensor Cards -->
+      <div class="grid">
+        <div class="card" id="c-smoke">
+          <div class="card-label">Kadar Asap</div>
+          <div class="card-value" id="v-ppm">--</div>
+          <div class="card-sub">PPM · ADC: <span id="v-adc">--</span></div>
+          <span class="badge badge-off" id="b-smoke">Menunggu…</span>
+        </div>
+        <div class="card" id="c-flame">
+          <div class="card-label">Sensor Api</div>
+          <div class="card-value" id="v-flame">--</div>
+          <div class="card-sub">Flame Sensor</div>
+          <span class="badge badge-off" id="b-flame">Menunggu…</span>
+        </div>
+        <div class="card" id="c-water">
+          <div class="card-label">Volume Air</div>
+          <div class="card-value" id="v-water">--</div>
+          <div class="card-sub">Jarak: <span id="v-dist">--</span> cm</div>
+          <span class="badge badge-off" id="b-water">Menunggu…</span>
+        </div>
+        <div class="card" id="c-pump">
+          <div class="card-label">Pompa Air</div>
+          <div class="card-value" id="v-pump">--</div>
+          <div class="card-sub">Relay Status</div>
+          <span class="badge badge-off" id="b-pump">Menunggu…</span>
+        </div>
+      </div>
 
-            let errors = 0;
+      <!-- History -->
+      <div class="section-title"><b>Riwayat 10 Data Terakhir</b></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Waktu</th>
+            <th>PPM</th>
+            <th>Api</th>
+            <th>Air %</th>
+            <th>Pompa</th>
+          </tr>
+        </thead>
+        <tbody id="hist"></tbody>
+      </table>
+    </div>
+    <footer>KODE IoT v5.1 · Polling setiap 2 detik</footer>
 
-            function poll() {
-                fetch(API + "/api/data")
-                    .then((r) => {
-                        if (!r.ok) throw r;
-                        return r.json();
-                    })
-                    .then((d) => {
-                        errors = 0;
-
-                        if (d.esp_connected) {
-                            online(true, "Terhubung");
-                        } else if (d.timestamp) {
-                            online(false, "Tidak Terhubung");
-                        } else {
-                            online(false, "ESP32 belum kirim data");
-                            return;
-                        }
-
-                        document.getElementById("last-time").innerText =
-                            new Date(d.timestamp).toLocaleTimeString("id-ID");
-
-                        // Smoke
-                        document.getElementById("v-ppm").innerText =
-                            d.ppm.toFixed(1);
-                        document.getElementById("v-adc").innerText = d.adc;
-                        const sc = document.getElementById("c-smoke"),
-                            sb = document.getElementById("b-smoke");
-                        if (d.ppm < 650) {
-                            sc.className = "card safe";
-                            sb.className = "badge badge-safe";
-                            sb.innerText = "Normal";
-                        } else if (d.ppm < 4000) {
-                            sc.className = "card warn";
-                            sb.className = "badge badge-warn";
-                            sb.innerText = "Peringatan";
-                        } else {
-                            sc.className = "card danger";
-                            sb.className = "badge badge-danger";
-                            sb.innerText = "BAHAYA!";
-                        }
-
-                        // Flame
-                        const fc = document.getElementById("c-flame"),
-                            fb = document.getElementById("b-flame");
-                        if (d.flame === 0) {
-                            document.getElementById("v-flame").innerText =
-                                "Aman";
-                            fc.className = "card safe";
-                            fb.className = "badge badge-safe";
-                            fb.innerText = "Tidak Ada Api";
-                        } else {
-                            document.getElementById("v-flame").innerText = "🔥";
-                            fc.className = "card danger";
-                            fb.className = "badge badge-danger";
-                            fb.innerText = "KEBAKARAN";
-                        }
-
-                        // Water
-                        document.getElementById("v-water").innerText =
-                            d.water_pct.toFixed(1) + "%";
-                        document.getElementById("v-dist").innerText =
-                            d.dist.toFixed(1);
-                        const wc = document.getElementById("c-water"),
-                            wb = document.getElementById("b-water");
-                        if (d.water_pct < 50) {
-                            wc.className = "card warn";
-                            wb.className = "badge badge-warn";
-                            wb.innerText = "Rendah <50%";
-                        } else {
-                            wc.className = "card safe";
-                            wb.className = "badge badge-safe";
-                            wb.innerText = "Aman";
-                        }
-
-                        // Pump
-                        const pc = document.getElementById("c-pump"),
-                            pb = document.getElementById("b-pump");
-                        if (d.pump === 1) {
-                            document.getElementById("v-pump").innerText =
-                                "💧 ON";
-                            pc.className = "card warn";
-                            pb.className = "badge badge-warn";
-                            pb.innerText = "Menyemprot";
-                        } else {
-                            document.getElementById("v-pump").innerText = "OFF";
-                            pc.className = "card safe";
-                            pb.className = "badge badge-safe";
-                            pb.innerText = "Standby";
-                        }
-                    })
-                    .catch(() => {
-                        if (++errors >= 3) online(false, "Tidak Terhubung");
-                    });
-
-                // History
-                fetch(API + "/api/history")
-                    .then((r) => r.json())
-                    .then((h) => {
-                        if (!h.length) return;
-                        document.getElementById("hist").innerHTML = h
-                            .slice(-10)
-                            .reverse()
-                            .map(
-                                (r) =>
-                                    `<tr><td>${new Date(r.timestamp).toLocaleTimeString("id-ID")}</td><td>${r.ppm.toFixed(0)}</td><td>${r.flame === 0 ? "Low" : "High!!!!!"}</td><td>${r.water_pct.toFixed(0)}%</td><td>${r.pump ? "💧" : "—"}</td></tr>`,
-                            )
-                            .join("");
-                    })
-                    .catch(() => {});
-            }
-
-            function online(ok, msg) {
-                document.getElementById("dot").className =
-                    "conn-dot " + (ok ? "on" : "off");
-                document.getElementById("conn-text").innerText =
-                    msg || (ok ? "Terhubung — Data Masuk" : "Terputus");
-            }
-
-            setInterval(poll, INTERVAL);
-            poll();
-
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('SW registered:', reg.scope))
-                    .catch(err => console.log('SW failed:', err));
-            }
-        </script>
-    </body>
+    <script type="module" src="js/app.js"></script>
+  </body>
 </html>
