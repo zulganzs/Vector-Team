@@ -18,32 +18,6 @@ export function updateLastTimeUI(timestamp) {
     }
 }
 
-export function updateSmokeUI(ppm, adc) {
-    const vPpm = document.getElementById("v-ppm");
-    const vAdc = document.getElementById("v-adc");
-    const sc = document.getElementById("c-smoke");
-    const sb = document.getElementById("b-smoke");
-
-    if (vPpm) vPpm.innerText = ppm.toFixed(1);
-    if (vAdc) vAdc.innerText = adc;
-
-    if (sc && sb) {
-        if (ppm < 650) {
-            sc.className = "card safe";
-            sb.className = "badge badge-safe";
-            sb.innerText = "Normal";
-        } else if (ppm < 4000) {
-            sc.className = "card warn";
-            sb.className = "badge badge-warn";
-            sb.innerText = "Peringatan";
-        } else {
-            sc.className = "card danger";
-            sb.className = "badge badge-danger";
-            sb.innerText = "BAHAYA!";
-        }
-    }
-}
-
 export function updateFlameUI(flame) {
     const vFlame = document.getElementById("v-flame");
     const fc = document.getElementById("c-flame");
@@ -132,7 +106,7 @@ export function updateHistoryUI(history) {
                 if (r.water_pct < 30) waterStatus = "Low";
                 else if (r.water_pct <= 80) waterStatus = "Not Full";
                 
-                return `<tr><td>${new Date(r.timestamp).toLocaleTimeString("id-ID")}</td><td>${r.ppm.toFixed(0)}</td><td>${r.flame === 0 ? "Low" : "High!!!!!"}</td><td>${waterStatus}</td><td>${r.pump ? "💧" : "—"}</td></tr>`;
+                return `<tr><td>${new Date(r.timestamp).toLocaleTimeString("id-ID")}</td><td>${r.flame === 0 ? "Low" : "High!!!!!"}</td><td>${waterStatus}</td><td>${r.pump ? "💧" : "—"}</td></tr>`;
             }
         )
         .join("");

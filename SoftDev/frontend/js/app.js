@@ -11,7 +11,6 @@ import {
 import { 
     updateConnectionUI, 
     updateLastTimeUI, 
-    updateSmokeUI, 
     updateFlameUI, 
     updateWaterUI, 
     updatePumpUI, 
@@ -42,7 +41,6 @@ async function poll() {
         }
 
         updateLastTimeUI(data.timestamp);
-        updateSmokeUI(data.ppm, data.adc);
         updateFlameUI(data.flame);
         updateWaterUI(data.water_pct, data.dist);
         updatePumpUI(data.pump);
