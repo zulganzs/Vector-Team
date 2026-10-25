@@ -1,5 +1,7 @@
 # KODE_FINAL: Sistem Monitoring Kebakaran & Asap IoT
 
+[![Windows CI](https://github.com/zulganzs/Vector-Team/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/zulganzs/Vector-Team/actions/workflows/windows-ci.yml)
+
 Sistem pemantauan cerdas berbasis IoT yang dirancang untuk mendeteksi potensi kebakaran secara real-time. Perangkat menggunakan sensor MQ2 (asap) dan sensor api yang dipadukan dengan ESP32, mengirimkan data ke dasbor berbasis web agar pengguna dapat memantau status keamanan gedung atau area secara langsung dari perangkat mobile maupun desktop.
 
 ## Fitur Utama
@@ -22,6 +24,8 @@ Sistem pemantauan cerdas berbasis IoT yang dirancang untuk mendeteksi potensi ke
 ```text
 Vector-Team/
 │
+├── run.bat                               # Setup & run otomatis untuk Windows (install deps + start server)
+├── .github/workflows/windows-ci.yml      # CI/CD: test run.bat otomatis di windows-latest
 ├── SoftDev/                              # Folder utama proyek Software Development
 │   │
 │   ├── backend/                          # API server berbasis Express.js
@@ -60,6 +64,16 @@ Vector-Team/
     ├── KODE_FINAL_CLOUD.ino              # Firmware ESP32 (WiFi, HTTP, Sensor)
     └── assets/                           # Dokumentasi hardware
 ```
+
+## Menjalankan di Windows (Cara Cepat)
+
+1. Pastikan [Node.js LTS](https://nodejs.org) sudah terinstal.
+2. Klik dua kali `run.bat` di root proyek (atau jalankan `run.bat` dari Command Prompt).
+
+Script akan otomatis: menginstal dependensi backend, membuat file `.env` (jika belum ada),
+menjalankan server di `http://localhost:3000`, dan membuka browser.
+
+Mode verifikasi untuk CI: `run.bat --check` (instal dependensi, boot server, cek endpoint `/api/health`, lalu berhenti).
 
 ## Panduan Instalasi
 
