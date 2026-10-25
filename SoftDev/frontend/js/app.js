@@ -12,7 +12,6 @@ import {
     updateConnectionUI, 
     updateLastTimeUI, 
     updateFlameUI, 
-    updateWaterUI, 
     updatePumpUI, 
     updateHistoryUI,
     handlePwaInstallUI,
@@ -42,7 +41,6 @@ async function poll() {
 
         updateLastTimeUI(data.timestamp);
         updateFlameUI(data.flame);
-        updateWaterUI(data.water_pct, data.dist);
         updatePumpUI(data.pump);
 
     } catch (err) {

@@ -38,41 +38,6 @@ export function updateFlameUI(flame) {
     }
 }
 
-export function updateWaterUI(waterPct, dist) {
-    const vWater = document.getElementById("v-water");
-    const vDist = document.getElementById("v-dist");
-    const wc = document.getElementById("c-water");
-    const wb = document.getElementById("b-water");
-
-    if (vDist) vDist.innerText = dist.toFixed(1);
-
-    let statusText = "Full";
-    if (waterPct < 30) {
-        statusText = "Low";
-        if (wc) wc.className = "card danger";
-        if (wb) {
-            wb.className = "badge badge-danger";
-            wb.innerText = "Kritis";
-        }
-    } else if (waterPct <= 80) {
-        statusText = "Not Full";
-        if (wc) wc.className = "card warn";
-        if (wb) {
-            wb.className = "badge badge-warn";
-            wb.innerText = "Normal";
-        }
-    } else {
-        statusText = "Full";
-        if (wc) wc.className = "card safe";
-        if (wb) {
-            wb.className = "badge badge-safe";
-            wb.innerText = "Aman";
-        }
-    }
-
-    if (vWater) vWater.innerText = statusText;
-}
-
 export function updatePumpUI(pump) {
     const vPump = document.getElementById("v-pump");
     const pc = document.getElementById("c-pump");
@@ -102,11 +67,7 @@ export function updateHistoryUI(history) {
         .reverse()
         .map(
             (r) => {
-                let waterStatus = "Full";
-                if (r.water_pct < 30) waterStatus = "Low";
-                else if (r.water_pct <= 80) waterStatus = "Not Full";
-                
-                return `<tr><td>${new Date(r.timestamp).toLocaleTimeString("id-ID")}</td><td>${r.flame === 0 ? "Low" : "High!!!!!"}</td><td>${waterStatus}</td><td>${r.pump ? "💧" : "—"}</td></tr>`;
+                return `<tr><td>${new Date(r.timestamp).toLocaleTimeString("id-ID")}</td><td>${r.flame === 0 ? "Low" : "High!!!!!"}</td><td>${r.pump ? "💧" : "—"}</td></tr>`;
             }
         )
         .join("");
