@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ['20', '22']
+        node: ['22', '24']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,6 +24,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: SoftDev/backend/package-lock.json
 
       - name: Execute run.bat (install dependencies + boot check)
         shell: cmd
