@@ -30,7 +30,7 @@ if errorlevel 1 (
     echo [ERROR] npm install failed.
     echo         - Check your internet connection, then run this file again.
     echo         - If you see node-gyp or MSBuild errors, install the Node.js LTS
-    echo           version from https://nodejs.org (it ships prebuilt binaries).
+    echo           version from https://nodejs.org - it ships prebuilt binaries.
     goto :fail
 )
 echo.
@@ -38,13 +38,14 @@ echo.
 echo [3/4] Preparing .env configuration...
 if exist ".env" (
     echo        Existing .env found - keeping it.
-) else (
-    (
-        echo PORT=3000
-        echo API_KEY=KODE_IOT_SECRET_KEY_2024
-    ) > ".env"
-    echo        Created .env with default settings.
+    goto :env_ready
 )
+(
+    echo PORT=3000
+    echo API_KEY=KODE_IOT_SECRET_KEY_2024
+) > ".env"
+echo        Created .env with default settings.
+:env_ready
 echo.
 
 if /i "%~1"=="--check" goto :ci_check
@@ -86,10 +87,10 @@ call :kill_server
 goto :fail
 
 :kill_server
-if exist ".server.pid" (
-    for /f "usebackq delims=" %%p in (".server.pid") do taskkill /pid %%p /t /f >nul 2>nul
-    del ".server.pid" >nul 2>nul
-)
+if not exist ".server.pid" goto :kill_done
+for /f "usebackq delims=" %%p in (".server.pid") do taskkill /pid %%p /t /f >nul 2>nul
+del ".server.pid" >nul 2>nul
+:kill_done
 if exist "server-out.log" del "server-out.log" >nul 2>nul
 if exist "server-err.log" del "server-err.log" >nul 2>nul
 exit /b 0
