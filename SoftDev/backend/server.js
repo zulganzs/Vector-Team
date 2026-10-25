@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const Database = require('better-sqlite3');
 
 const app = express();
@@ -257,6 +258,12 @@ app.get('/api/health', (req, res) => {
     readingsStored
   });
 });
+
+// Serve the frontend dashboard from this server when the folder is present.
+// Local runs (run.bat) get backend + frontend on one port, http://localhost:3000.
+// API-only deploys (Railway) do not include ../frontend and are unaffected.
+const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
+if (fs.existsSync(FRONTEND_DIR)) app.use(express.static(FRONTEND_DIR));
 
 // Root — simple status page
 app.get('/', (req, res) => {

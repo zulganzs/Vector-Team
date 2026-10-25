@@ -24,7 +24,7 @@ Sistem pemantauan cerdas berbasis IoT yang dirancang untuk mendeteksi potensi ke
 ```text
 Vector-Team/
 │
-├── run.bat                               # Setup & run otomatis untuk Windows (install deps + start server)
+├── run.bat                               # Setup & run otomatis untuk Windows (install deps + start backend & frontend)
 ├── .github/workflows/windows-ci.yml      # CI/CD: test run.bat otomatis di windows-latest
 ├── SoftDev/                              # Folder utama proyek Software Development
 │   │
@@ -71,7 +71,9 @@ Vector-Team/
 2. Klik dua kali `run.bat` di root proyek (atau jalankan `run.bat` dari Command Prompt).
 
 Script akan otomatis: menginstal dependensi backend, membuat file `.env` (jika belum ada),
-menjalankan server di `http://localhost:3000`, dan membuka browser.
+menjalankan server di `http://localhost:3000` — API backend **dan** dasbor frontend
+dilayani dari satu port — lalu membuka browser. Saat dibuka dari localhost, dasbor
+otomatis membaca data dari backend lokal; saat di-deploy ke Vercel, tetap memakai URL produksi.
 
 Mode verifikasi untuk CI: `run.bat --check` (instal dependensi, boot server, cek endpoint `/api/health`, lalu berhenti).
 

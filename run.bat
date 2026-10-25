@@ -50,7 +50,7 @@ echo.
 
 if /i "%~1"=="--check" goto :ci_check
 
-echo [4/4] Starting backend server on http://localhost:3000 ...
+echo [4/4] Starting server - backend API + frontend dashboard on http://localhost:3000 ...
 echo        Keep this window open. Press Ctrl+C to stop the server.
 echo.
 start "" cmd /c "ping -n 4 127.0.0.1 >nul & start http://localhost:3000"
@@ -78,6 +78,12 @@ goto :ci_fail
 
 :ci_ok
 echo        Server responded OK on /api/health.
+curl -s -f --max-time 5 -o nul http://localhost:3000/
+if errorlevel 1 (
+    echo [ERROR] Frontend did not respond on http://localhost:3000/
+    goto :ci_fail
+)
+echo        Frontend responded OK on http://localhost:3000/
 call :kill_server
 echo [OK] All checks passed - run.bat works on Windows.
 goto :done

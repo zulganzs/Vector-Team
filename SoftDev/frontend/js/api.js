@@ -1,4 +1,9 @@
-const API_BASE_URL = "https://testing-production-3853.up.railway.app";
+// When the dashboard is served locally (run.bat on localhost:3000), talk to the
+// local backend instead of the deployed Railway API. Deployed builds (Vercel)
+// keep using the production URL.
+const API_BASE_URL = ["localhost", "127.0.0.1"].includes(location.hostname)
+    ? location.origin
+    : "https://testing-production-3853.up.railway.app";
 
 /**
  * Fetches the latest sensor data from the backend.
