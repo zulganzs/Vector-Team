@@ -12,8 +12,10 @@ import {
     updateConnectionUI, 
     updateLastTimeUI, 
     updateFlameUI, 
-    updatePumpUI, 
+    updatePumpUI,
+    updateStaleUI,
     updateHistoryUI,
+    updateHistoryErrorUI,
     handlePwaInstallUI,
     hidePwaInstallBtn
 } from './ui.js';
@@ -27,26 +29,29 @@ async function poll() {
         resetErrors();
         updateSensorData(data);
 
+        updateLastTimeUI(data.timestamp);
+
         if (data.esp_connected) {
             updateConnectionStatus(true, "Terhubung");
-            updateConnectionUI(true, "Terhubung");
-        } else if (data.timestamp) {
-            updateConnectionStatus(false, "Tidak Terhubung");
-            updateConnectionUI(false, "Tidak Terhubung");
+            updateConnectionUI(true, "Terhubung — data masuk");
+            updateFlameUI(data.flame);
+            updatePumpUI(data.pump);
         } else {
-            updateConnectionStatus(false, "ESP32 belum kirim data");
-            updateConnectionUI(false, "ESP32 belum kirim data");
-            return;
+            // Server reachable, ESP32 silent: grey out the cards instead of
+            // presenting the last reading as live.
+            const msg = data.timestamp
+                ? "ESP32 tidak mengirim data"
+                : "ESP32 belum mengirim data";
+            updateConnectionStatus(false, msg);
+            updateConnectionUI(false, msg);
+            updateStaleUI(data.timestamp);
         }
-
-        updateLastTimeUI(data.timestamp);
-        updateFlameUI(data.flame);
-        updatePumpUI(data.pump);
-
     } catch (err) {
         if (incrementErrors() >= 3) {
-            updateConnectionStatus(false, "Tidak Terhubung");
-            updateConnectionUI(false, "Tidak Terhubung");
+            const msg = "Server tidak dapat dihubungi — mencoba lagi";
+            updateConnectionStatus(false, msg);
+            updateConnectionUI(false, msg);
+            updateStaleUI(state.sensorData && state.sensorData.timestamp);
         }
     }
 
@@ -55,7 +60,7 @@ async function poll() {
         updateHistory(historyData);
         updateHistoryUI(historyData);
     } catch (err) {
-        // Silently handle history fetch errors
+        updateHistoryErrorUI();
     }
 }
 
@@ -96,32 +101,12 @@ function initPWA() {
         deferredPrompt = null;
         console.log('PWA was installed');
     });
-
-    document.addEventListener('visibilitychange', async () => {
-        if (document.visibilityState === 'visible' && !deferredPrompt) {
-            try {
-                if ('getInstalledRelatedApps' in navigator) {
-                    const apps = await navigator.getInstalledRelatedApps();
-                    if (apps.length === 0) {
-                        window.location.reload();
-                    }
-                }
-            } catch (e) {
-                if (!window.matchMedia('(display-mode: standalone)').matches) {
-                    const btnInstall = document.getElementById('btn-install');
-                    if (btnInstall && btnInstall.style.display === 'none') {
-                        window.location.reload();
-                    }
-                }
-            }
-        }
-    });
 }
 
 function updateOfflineUI(isOffline) {
     const badge = document.getElementById('offline-badge');
     if (badge) {
-        badge.style.display = isOffline ? 'inline-block' : 'none';
+        badge.hidden = !isOffline;
     }
 }
 

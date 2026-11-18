@@ -1,8 +1,9 @@
-const CACHE_NAME = 'kode-iot-v3';
+const CACHE_NAME = 'kode-iot-v5';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/map.html',
+    '/css/style.css',
     '/manifest.json'
 ];
 

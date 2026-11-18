@@ -1,0 +1,382 @@
+/*
+  Design read
+  Purpose: someone glances at this from across a lab and needs one answer —
+  is there a fire. So the page IS the answer: a full-width status band that
+  changes colour and word, with everything else kept quiet underneath.
+  Identity: fire-safety signage. Paper-and-ink neutrals, signal colours used
+  only for real states, square corners, heavy condensed-looking system type.
+  System fonts on purpose: the app is an offline-capable PWA, so no webfont
+  request that can fail with the network.
+*/
+
+:root {
+  --paper: #f3f0e8;
+  --paper-2: #e6e2d6;
+  --ink: #1b1b18;
+  --ink-2: #57544b;
+  --rule: #cdc8ba;
+
+  --safe-bg: #1d6b3b;
+  --danger-bg: #b3261e;
+  --stale-bg: var(--paper-2);
+  --on-signal: #ffffff;
+
+  --pump-on: #8a4b00;
+  --alert-text: #b3261e;
+  --ok-text: #1d6b3b;
+
+  --radius: 2px;
+  --font: "Helvetica Neue", Arial, "Segoe UI", system-ui, sans-serif;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #121211;
+    --paper-2: #1f1e1c;
+    --ink: #ecebe6;
+    --ink-2: #a9a69c;
+    --rule: #34332f;
+
+    --safe-bg: #1f7a43;
+    --danger-bg: #c62828;
+    --stale-bg: var(--paper-2);
+
+    --pump-on: #ffb74d;
+    --alert-text: #ff8a80;
+    --ok-text: #81c995;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+a,
+.link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.link {
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+a:hover,
+.link:hover {
+  text-decoration-thickness: 2px;
+}
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+[hidden] {
+  display: none !important;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Top bar */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 20px 12px;
+}
+.bar-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.bar nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 20px;
+  font-size: 0.9rem;
+}
+.offline-note {
+  color: var(--alert-text);
+  font-weight: 700;
+}
+
+/* Connection line */
+.conn {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.conn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  flex: none;
+}
+.conn-dot.on {
+  background: var(--ok-text);
+}
+.conn-dot.off {
+  background: var(--alert-text);
+}
+#conn-text {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Status band: the answer to "is there a fire" */
+.status {
+  background: var(--stale-bg);
+  color: var(--ink);
+  padding: 32px 20px 36px;
+  transition: background 0.3s;
+}
+.status[data-state="safe"] {
+  background: var(--safe-bg);
+  color: var(--on-signal);
+}
+.status[data-state="danger"] {
+  background: var(--danger-bg);
+  color: var(--on-signal);
+}
+.status-inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.status-kicker {
+  font-size: 0.95rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.status-word {
+  font-size: clamp(3.4rem, 15vw, 8.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  margin: 6px 0 14px;
+}
+.status[data-state="stale"] .status-word {
+  font-size: clamp(2.2rem, 8vw, 4rem);
+}
+.status-compact .status-word {
+  font-size: clamp(2.6rem, 10vw, 5rem);
+}
+.status-detail {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.status-meta {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+.status[data-state="stale"] .status-meta,
+.status[data-state="stale"] .status-kicker {
+  color: var(--ink-2);
+  opacity: 1;
+}
+
+/* Page body */
+main {
+  display: block;
+}
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.section {
+  padding: 28px 0 0;
+}
+.section h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.section-note {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+/* Pump row: supporting reading, plain ruled row, not a card */
+.row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 24px;
+  align-items: baseline;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.row-label {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.row-meta {
+  grid-column: 1;
+  color: var(--ink-2);
+  font-size: 0.85rem;
+}
+.row-value {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 1.9rem;
+  font-weight: 800;
+  text-align: right;
+  letter-spacing: -0.01em;
+}
+.row-detail {
+  grid-column: 2;
+  grid-row: 2;
+  text-align: right;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.row[data-state="warn"] .row-value,
+.row[data-state="warn"] .row-detail {
+  color: var(--pump-on);
+}
+.row[data-state="stale"] .row-value {
+  color: var(--ink-2);
+}
+
+/* Ledger tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  padding: 8px 12px 8px 0;
+  border-bottom: 2px solid var(--ink);
+}
+td {
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+td.cell-alert,
+td.state-off {
+  color: var(--alert-text);
+  font-weight: 800;
+}
+td.state-on {
+  color: var(--ok-text);
+  font-weight: 700;
+}
+td.cell-note {
+  padding: 18px 0;
+  color: var(--ink-2);
+  max-width: 60ch;
+}
+
+/* Device facts (status page) */
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0 32px;
+}
+.facts dt,
+.facts dd {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.facts dt {
+  color: var(--ink-2);
+}
+.facts dd {
+  font-weight: 700;
+}
+
+/* Location */
+.map-frame {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+#map {
+  height: 340px;
+  width: 100%;
+}
+.map-empty {
+  padding: 18px 20px;
+  background: var(--paper-2);
+  border-radius: var(--radius);
+  max-width: 62ch;
+}
+.map-empty strong {
+  display: block;
+  margin-bottom: 4px;
+}
+.map-empty span {
+  color: var(--ink-2);
+}
+
+footer {
+  max-width: 960px;
+  margin: 40px auto 0;
+  padding: 16px 20px 32px;
+  border-top: 1px solid var(--rule);
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+@media (max-width: 480px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+  .row-value,
+  .row-detail {
+    grid-column: 1;
+    text-align: left;
+  }
+  .row-value {
+    grid-row: 2;
+  }
+  .row-detail {
+    grid-row: 3;
+  }
+  .row-meta {
+    grid-row: 4;
+  }
+  .facts {
+    gap: 0 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

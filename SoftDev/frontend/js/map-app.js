@@ -8,12 +8,10 @@ import {
     clearOffline
 } from "./map-state.js";
 import {
-    initMap,
     updateDeviceInfo,
     updateConnectionDot,
     renderHistoryTable,
-    DEFAULT_LAT,
-    DEFAULT_LNG
+    showLocation
 } from "./map-ui.js";
 
 const POLLING_INTERVAL = 5000;
@@ -36,12 +34,15 @@ async function poll() {
         updateConnectionDot(connected);
         updateDeviceInfo(connected, data.timestamp);
         
+        // Only real coordinates from the device are ever shown on the map.
+        if (Number.isFinite(data.lat) && Number.isFinite(data.lng)) {
+            showLocation(data.lat, data.lng);
+        }
+
         if (data.timestamp) {
             const time = new Date(data.timestamp).toLocaleTimeString("id-ID");
             const entry = {
                 time: time,
-                lat: DEFAULT_LAT,
-                lng: DEFAULT_LNG,
                 connected: connected,
             };
             
@@ -64,8 +65,6 @@ async function poll() {
  * Initialize the application on DOM Content Loaded.
  */
 document.addEventListener("DOMContentLoaded", () => {
-    initMap();
-    
     // Initial fetch and start polling
     poll();
     setInterval(poll, POLLING_INTERVAL);
